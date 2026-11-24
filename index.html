@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>حاسبة الألمنيوم</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e6e9ec;--card:#f6f7f8;--ink:#1a2730;--mut:#5a6a75;--line:#c5cdd3;--ac:#0e5a78;--on:#fff;--wa:#d49a3a;--bar:#9db2c0;--err:#a3321f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11181d;--card:#1a242b;--ink:#e4eaee;--mut:#93a3ae;--line:#2f3d46;--ac:#5bb4d6;--on:#0b1317;--wa:#b9842f;--bar:#3d5a6c;--err:#f08a76}}
+:root[data-theme="dark"]{--bg:#11181d;--card:#1a242b;--ink:#e4eaee;--mut:#93a3ae;--line:#2f3d46;--ac:#5bb4d6;--on:#0b1317;--wa:#b9842f;--bar:#3d5a6c;--err:#f08a76}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;line-height:1.6}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:4px 0 2px}
+h2{font-size:16px;margin:0 0 10px}
+.sub{color:var(--mut);margin:0 0 16px;font-size:14px}
+.grid{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:16px;align-items:start}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+label{display:block;font-size:13px;color:var(--mut);margin:8px 0 2px}
+input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit;font-size:15px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button{font:inherit;cursor:pointer;border-radius:6px;border:1px solid var(--ac);padding:9px 14px}
+.pri{background:var(--ac);color:var(--on);width:100%;margin-top:12px;font-weight:700}
+.sec{background:transparent;color:var(--ac)}
+.job{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.job:first-of-type{border-top:0}
+.job button{padding:3px 10px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:right;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{color:var(--mut);font-weight:500;font-size:13px}
+.num{direction:ltr;unicode-bidi:isolate;display:inline-block}
+.big{font-weight:700;font-size:18px}
+.scroll{overflow-x:auto}
+details{margin-bottom:10px}
+summary{cursor:pointer;font-weight:700;padding:4px 0}
+.bar{display:flex;direction:ltr;height:26px;border-radius:4px;overflow:hidden;margin:4px 0;background:repeating-linear-gradient(135deg,var(--wa) 0 4px,transparent 4px 8px);border:1px solid var(--line)}
+.seg{background:var(--bar);border-inline-end:2px solid var(--card);font-size:11px;display:flex;align-items:center;justify-content:center;overflow:hidden;white-space:nowrap;min-width:0}
+.hint{font-size:12px;color:var(--mut)}
+.err{color:var(--err);font-size:13px}
+.empty{color:var(--mut);padding:20px;text-align:center;border:1px dashed var(--line);border-radius:8px}
+.pgrid{display:grid;grid-template-columns:1fr 90px;gap:6px 10px;align-items:center}
+.pgrid label{margin:0}
+#gate{position:fixed;inset:0;z-index:99;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+#gate[hidden]{display:none}
+.gcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;width:100%;max-width:400px}
+.lic{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--mut);margin-bottom:6px}
+.lic button{padding:2px 10px;font-size:12px}
+</style>
+</head>
+<body>
+<div id="gate" hidden></div>
+<div class="wrap">
+<h1>حاسبة الألمنيوم</h1>
+<p class="sub">أضف أعمال المشروع، وسيحسب لك الأطوال والأعواد المطلوبة وخطة القص. (نموذج أولي، المقاسات بالسنتيمتر)</p>
+<div class="grid">
+<div>
+<div class="card">
+<h2>إضافة عمل</h2>
+<label for="tpl">نوع العمل</label>
+<select id="tpl"></select>
+<div id="fields" class="row"></div>
+<label for="qty">العدد</label>
+<input id="qty" type="number" inputmode="numeric" min="1" value="1">
+<button class="pri" id="add">أضف العمل</button>
+</div>
+<div class="card">
+<h2>إدخال سريع بالنص</h2>
+<textarea id="quick" rows="2" placeholder="مثال: 5 شباك 120x100، 2 باب 220x90"></textarea>
+<button class="sec" id="qbtn" style="margin-top:8px">حوّل النص إلى أعمال</button>
+<p class="hint">في التطبيق الكامل سيتولى الذكاء الاصطناعي فهم الجمل والصور. هنا يقرأ النمط البسيط فقط.</p>
+<div id="qerr" class="err"></div>
+</div>
+<div class="card">
+<h2>أعمال المشروع</h2>
+<div id="jobs"></div>
+</div>
+<div class="card">
+<details>
+<summary>الإعدادات والخصومات</summary>
+<div class="pgrid" id="gen"></div>
+<div id="settings"></div>
+</details>
+</div>
+</div>
+<div id="out"></div>
+</div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const f1=n=>+(+n).toFixed(1);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const PR={frame:'قطاع إطار',sash:'قطاع ضلفة سحاب',inter:'قطاع تعشيق',stile:'قطاع ضلفة باب',post:'عمود درابزين',hand:'يد درابزين',bal:'بلاستر',csh:'قطاع ضلفة شباك',cab:'قطاع هيكل مطبخ',cdoor:'قطاع ضلفة مطبخ',vert:'قطاع رأسي (واجهة)',horz:'قطاع أفقي (واجهة)',mull:'قائم ستارة وول',trans:'عارضة ستارة وول',uch:'قناة حاجز دش',beam:'عرق مظلة',edge:'قطاع حافة مظلة',mf:'قطاع ناموسية'};
+const TPL={
+slide:{n:'شباك سحاب (ضلفتين)',
+f:[['w','العرض',120],['h','الارتفاع',100]],
+p:[['fd','خصم الإطار',1],['ov','تراكب الضلف',2],['sd','خصم ارتفاع الضلفة',5],['gd','خصم الزجاج',7]],
+c(v,p){const sw=v.w/2+p.ov,sh=v.h-p.sd,gw=sw-p.gd,gh=sh-p.gd;
+return{cuts:[['frame','إطار أفقي',2,v.w-p.fd],['frame','إطار قائم',2,v.h-p.fd],['sash','ضلفة أفقي',4,sw],['sash','ضلفة قائم',4,sh],['inter','تعشيق',2,sh]],
+glass:[['زجاج ضلفة',2,gw,gh]],
+acc:[['عجلة',4,'حبة'],['قفل',2,'حبة'],['جوما زجاج',2*2*(gw+gh)/100,'م']]}}},
+door:{n:'باب ضلفة واحدة',
+f:[['w','العرض',90],['h','الارتفاع',220]],
+p:[['fd','خصم الإطار',4],['dd','خلوص الضلفة',3],['sw','عرض قطاع الضلفة',6]],
+c(v,p){const lw=v.w-p.fd-p.dd,lh=v.h-p.fd/2-p.dd,gw=lw-2*p.sw+2,gh=lh-2*p.sw+2;
+return{cuts:[['frame','إطار قائم',2,v.h],['frame','إطار علوي',1,v.w-p.fd],['stile','قائم ضلفة',2,lh],['stile','عارضة ضلفة',2,lw-2*p.sw]],
+glass:[['زجاج باب',1,gw,gh]],
+acc:[['مفصلة',3,'حبة'],['قفل',1,'حبة'],['يد',1,'حبة']]}}},
+rail:{n:'درابزين',
+f:[['l','الطول الكلي',300],['h','الارتفاع',100],['s','تباعد الأعمدة',150],['b','تباعد البلاستر',12]],
+p:[['bd','خصم البلاستر',12]],
+c(v,p){const n=Math.ceil(v.l/v.s)+1,nb=Math.ceil(v.l/v.b);
+return{cuts:[['post','عمود',n,v.h],['hand','يد علوية',1,v.l],['hand','عارضة سفلية',1,v.l],['bal','بلاستر',nb,v.h-p.bd]],
+glass:[],acc:[['قاعدة عمود',n,'حبة'],['غطاء عمود',n,'حبة']]}}},
+case:{n:'شباك مفصلي',
+f:[['w','العرض',100],['h','الارتفاع',120],['n','عدد الضلف',1,' (1 أو 2)']],
+p:[['fd','خصم الإطار',1],['cl','خلوص الضلفة',1.5],['gd','خصم الزجاج',7]],
+c(v,p){const n=Math.round(v.n),sw=(v.w-p.fd-2*p.cl)/n,sh=v.h-p.fd-2*p.cl,gw=sw-p.gd,gh=sh-p.gd;
+return{cuts:[['frame','إطار أفقي',2,v.w-p.fd],['frame','إطار قائم',2,v.h-p.fd],['csh','ضلفة أفقي',2*n,sw],['csh','ضلفة قائم',2*n,sh]],
+glass:[['زجاج ضلفة',n,gw,gh]],acc:[['مفصلة',2*n,'حبة'],['يد شباك',n,'حبة'],['جوما زجاج',n*2*(gw+gh)/100,'م']]}}},
+kitchen:{n:'مطبخ ألمنيوم (وحدات)',
+f:[['l','الطول الكلي',300],['h','ارتفاع الخزانة',70],['d','العمق',55],['n','عدد الأبواب',4,' (عدد)']],
+p:[['gp','خلوص الباب',0.6],['sw','عرض قطاع الباب',4.5],['cw','عرض قطاع الهيكل',4]],
+c(v,p){const n=Math.round(v.n),u=v.l/n,lw=u-p.gp,lh=v.h-p.gp,gw=lw-2*p.sw+2,gh=lh-2*p.sw+2;
+return{cuts:[['cab','قائم هيكل',n+1,v.h],['cab','عارضة أمامية',2*n,u-p.cw],['cab','عارضة عمق',2*(n+1),v.d-p.cw],['cdoor','قائم باب',2*n,lh],['cdoor','عارضة باب',2*n,lw-2*p.sw]],
+glass:[['لوح باب مطبخ',n,gw,gh]],acc:[['مفصلة',2*n,'حبة'],['يد',n,'حبة']]}}},
+clad:{n:'واجهة كلادينج',
+f:[['w','عرض الواجهة',1000],['h','ارتفاع الواجهة',400]],
+p:[['pw','عرض اللوح',122],['ph','طول اللوح',244],['vs','تباعد القوائم',60],['hs','تباعد العوارض',120]],
+c(v,p){const nb=Math.ceil(v.w/p.vs),nh=Math.ceil(v.h/p.hs)+1,np=Math.ceil(v.w/p.pw)*Math.ceil(v.h/p.ph);
+return{cuts:[['vert','قائم رأسي',nb+1,v.h],['horz','عارضة أفقية',nb*nh,v.w/nb-4]],
+glass:[['لوح كلادينج',np,p.pw,p.ph]],acc:[['مسمار تثبيت',(nb+1)*nh*2,'حبة'],['سيليكون',Math.ceil(np/3),'عبوة']]}}},
+curtain:{n:'واجهة ستارة وول (زجاج)',
+f:[['w','عرض الواجهة',600],['h','ارتفاع الواجهة',300],['bw','عرض المديول',120],['bh','ارتفاع المديول',150]],
+p:[['md','عرض القائم',5],['gd','خصم الزجاج',6]],
+c(v,p){const nb=Math.ceil(v.w/v.bw),nr=Math.ceil(v.h/v.bh),mw=v.w/nb,mh=v.h/nr,gw=mw-p.gd,gh=mh-p.gd;
+return{cuts:[['mull','قائم رأسي',nb+1,v.h],['trans','عارضة أفقية',(nr+1)*nb,mw-p.md]],
+glass:[['زجاج مديول',nb*nr,gw,gh]],acc:[['كبسة زجاج',4*nb*nr,'حبة'],['جوما',nb*nr*2*(gw+gh)/100,'م']]}}},
+shower:{n:'حاجز دش',
+f:[['w','العرض',90],['h','الارتفاع',190]],
+p:[['gd','خصم الزجاج',4]],
+c(v,p){const gw=v.w-p.gd,gh=v.h-p.gd;
+return{cuts:[['uch','قناة جانبية',2,v.h],['uch','قناة سفلية',1,v.w]],
+glass:[['زجاج حاجز',1,gw,gh]],acc:[['مفصلة',2,'حبة'],['يد',1,'حبة'],['جوما',(2*(gw+gh))/100,'م']]}}},
+awning:{n:'مظلة / برجولة',
+f:[['w','العرض',400],['p','البروز',250],['s','تباعد العروق',60]],
+p:[['ov','زيادة الغطاء',5]],
+c(v,p){const n=Math.ceil(v.w/v.s)+1;
+return{cuts:[['beam','عرق',n,v.p+p.ov],['edge','حافة أمامية وخلفية',2,v.w]],
+glass:[['لوح تغطية',1,v.w,v.p+p.ov]],acc:[['قاعدة تثبيت',n,'حبة'],['براغي',n*4,'حبة']]}}},
+mesh:{n:'ناموسية (سلك)',
+f:[['w','عرض الفتحة',100],['h','ارتفاع الفتحة',120]],
+p:[['fd','خصم الإطار',3],['mt','زيادة السلك',2]],
+c(v,p){const w=v.w-p.fd,h=v.h-p.fd;
+return{cuts:[['mf','إطار أفقي',2,w],['mf','إطار قائم',2,h]],
+glass:[['شبك سلك',1,w+p.mt,h+p.mt]],acc:[['ركن',4,'حبة'],['عجلة',2,'حبة'],['جوما سلك',(2*(w+h))/100,'م']]}}}
+};
+TPL.sdoor={...TPL.slide,n:'باب سحاب (ضلفتين)',f:[['w','العرض',200],['h','الارتفاع',220]]};
+let S={jobs:[],bar:600,kerf:0.3,pr:{...PR},pm:{}};
+try{const r=localStorage.getItem('alu-proto-1');if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+S.pr={...PR,...S.pr};
+const save=()=>{try{localStorage.setItem('alu-proto-1',JSON.stringify(S))}catch(e){}};
+const par=k=>{const o={};TPL[k].p.forEach(([a,,d])=>o[a]=(S.pm[k]&&S.pm[k][a]!=null)?S.pm[k][a]:d);return o};
+
+function pack(lens){
+const bars=[],bad=[];
+lens.slice().sort((a,b)=>b-a).forEach(L=>{
+if(L<=0)return;
+if(L>S.bar){bad.push(L);return}
+const need=L+S.kerf;
+let b=bars.find(x=>S.bar-x.used>=need-1e-9);
+if(!b){b={items:[],used:0};bars.push(b)}
+b.items.push(L);b.used+=need;
+});
+return{bars,bad};
+}
+
+function calc(){
+const cuts={},glass={},acc={},lines=[];
+S.jobs.forEach(j=>{
+const t=TPL[j.t];const r=t.c(j.v,par(j.t));
+r.cuts.forEach(([pk,lab,q,len])=>{const k=pk+'|'+f1(len);cuts[k]=cuts[k]||{pk,len:f1(len),q:0,labs:new Set()};cuts[k].q+=q*j.q;cuts[k].labs.add(lab)});
+r.glass.forEach(([lab,q,w,h])=>{const k=f1(w)+'x'+f1(h);glass[k]=glass[k]||{w:f1(w),h:f1(h),q:0};glass[k].q+=q*j.q});
+r.acc.forEach(([n,q,u])=>{acc[n]=acc[n]||{n,q:0,u};acc[n].q+=q*j.q});
+});
+return{cuts,glass,acc};
+}
+
+function render(){
+$('#jobs').innerHTML=S.jobs.length?S.jobs.map((j,i)=>{
+const t=TPL[j.t];const d=t.f.map(([k,l])=>`${l} <span class="num">${j.v[k]}</span>`).join(' · ');
+return`<div class="job"><div><b>${j.q} × ${t.n}</b><br><span class="hint">${d}</span></div><button class="sec" data-del="${i}">حذف</button></div>`}).join(''):'<div class="hint">لا توجد أعمال بعد.</div>';
+const out=$('#out');
+if(!S.jobs.length){out.innerHTML='<div class="empty">أضف أول عمل من القائمة لتظهر قائمة المشتريات وخطة القص هنا.</div>';return}
+const R=calc();
+const byP={};Object.values(R.cuts).forEach(c=>{(byP[c.pk]=byP[c.pk]||[]).push(c)});
+let buy='',plan='',list='';
+Object.keys(byP).forEach(pk=>{
+const lens=[];byP[pk].forEach(c=>{for(let i=0;i<Math.round(c.q);i++)lens.push(c.len)});
+const {bars,bad}=pack(lens);
+const total=bars.length*S.bar,left=bars.reduce((a,b)=>a+(S.bar-b.used),0);
+const waste=total?left/total*100:0;
+buy+=`<tr><td>${esc(S.pr[pk])}</td><td class="big">${bars.length}</td><td><span class="num">${f1(waste)}%</span></td></tr>`;
+if(bad.length)buy+=`<tr><td colspan="3" class="err">${esc(S.pr[pk])}: توجد قطعة أطول من العود (${f1(Math.max(...bad))} سم). عدّل طول العود أو المقاس.</td></tr>`;
+plan+=`<details><summary>${esc(S.pr[pk])} (${bars.length} عود)</summary>`+bars.map((b,i)=>`<div class="hint">عود ${i+1}</div><div class="bar" title="الهدر ${f1(S.bar-b.used)} سم">`+b.items.map(L=>`<div class="seg" style="width:${L/S.bar*100}%">${f1(L)}</div>`).join('')+`</div>`).join('')+`</details>`;
+list+=byP[pk].sort((a,b)=>b.len-a.len).map(c=>`<tr><td>${esc(S.pr[pk])}</td><td>${[...c.labs].join('، ')}</td><td><span class="num">${c.len}</span></td><td>${Math.round(c.q)}</td></tr>`).join('');
+});
+const gl=Object.values(R.glass).map(g=>`<tr><td><span class="num">${g.w} × ${g.h}</span></td><td>${g.q}</td><td><span class="num">${f1(g.w*g.h*g.q/10000)}</span> م²</td></tr>`).join('');
+const ac=Object.values(R.acc).map(a=>`<tr><td>${a.n}</td><td>${a.u==='م'?f1(Math.ceil(a.q*1.1*10)/10):Math.round(a.q)} ${a.u}</td></tr>`).join('');
+out.innerHTML=`
+<div class="card"><h2>قائمة المشتريات</h2><div class="scroll"><table><tr><th>القطاع</th><th>عدد الأعواد (${S.bar} سم)</th><th>الهدر</th></tr>${buy}</table></div></div>
+<div class="card"><h2>الزجاج واللوحات</h2>${gl?`<div class="scroll"><table><tr><th>المقاس (سم)</th><th>العدد</th><th>المساحة</th></tr>${gl}</table></div>`:'<div class="hint">لا يوجد زجاج في هذه الأعمال.</div>'}</div>
+<div class="card"><h2>الإكسسوارات</h2><div class="scroll"><table><tr><th>الصنف</th><th>الكمية</th></tr>${ac}</table></div><p class="hint">الجوما محسوبة مع زيادة 10%.</p></div>
+<div class="card"><h2>خطة القص</h2><p class="hint">الجزء المخطط بالأصفر في آخر كل عود هو الهدر. القطع مرتبة من الأطول للأقصر لتقليل الهدر.</p>${plan}</div>
+<div class="card"><details><summary>قائمة القطع المقطوعة</summary><div class="scroll"><table><tr><th>القطاع</th><th>القطعة</th><th>الطول (سم)</th><th>العدد</th></tr>${list}</table></div></details></div>`;
+}
+
+function buildForm(){
+const k=$('#tpl').value;
+$('#fields').innerHTML=TPL[k].f.map(([a,l,d,u])=>`<div><label for="f_${a}">${l}${u===undefined?' (سم)':u}</label><input id="f_${a}" data-f="${a}" type="number" inputmode="decimal" min="1" value="${d}"></div>`).join('');
+}
+function buildSettings(){
+$('#gen').innerHTML=`<label>طول العود (سم)</label><input type="number" id="s_bar" value="${S.bar}"><label>سماكة المنشار (سم)</label><input type="number" step="0.1" id="s_kerf" value="${S.kerf}">`;
+let h='<h2 style="margin-top:14px">أسماء القطاعات</h2><div class="pgrid">';
+Object.keys(PR).forEach(k=>h+=`<label>${PR[k]}</label><input data-pr="${k}" value="${esc(S.pr[k])}">`);
+h+='</div>';
+Object.keys(TPL).forEach(k=>{const p=par(k);h+=`<h2 style="margin-top:14px">خصومات: ${TPL[k].n}</h2><div class="pgrid">`+TPL[k].p.map(([a,l])=>`<label>${l}</label><input type="number" step="0.1" data-pm="${k}.${a}" value="${p[a]}">`).join('')+'</div>'});
+$('#settings').innerHTML=h;
+}
+
+function addJob(t,v,q){S.jobs.push({t,v,q});save();render()}
+
+$('#tpl').innerHTML=Object.keys(TPL).map(k=>`<option value="${k}">${TPL[k].n}</option>`).join('');
+$('#tpl').onchange=buildForm;
+$('#add').onclick=()=>{
+const k=$('#tpl').value,v={};let ok=true;
+TPL[k].f.forEach(([a])=>{const n=parseFloat($('#f_'+a).value);if(!(n>0))ok=false;v[a]=n});
+const q=parseInt($('#qty').value);
+if(!ok||!(q>0)){$('#qty').focus();return}
+addJob(k,v,q);
+};
+$('#jobs').onclick=e=>{const i=e.target.dataset.del;if(i!=null){S.jobs.splice(+i,1);save();render()}};
+$('#qbtn').onclick=()=>{
+const t=$('#quick').value.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+const re=/(\d+)?\s*(شبابيك|شباك|أبواب|ابواب|باب)\s*(\d+(?:\.\d+)?)\s*(?:x|X|×|\*|في)\s*(\d+(?:\.\d+)?)/g;
+let m,c=0;
+while((m=re.exec(t))){addJob(m[2].startsWith('ش')?'slide':'door',{w:+m[3],h:+m[4]},+(m[1]||1));c++}
+$('#qerr').textContent=c?'':'لم أفهم النص. جرّب: 5 شباك 120x100';
+if(c)$('#quick').value='';
+};
+$('#settings').oninput=e=>{
+const t=e.target;
+if(t.dataset.pr){S.pr[t.dataset.pr]=t.value||PR[t.dataset.pr]}
+if(t.dataset.pm){const [k,a]=t.dataset.pm.split('.');S.pm[k]=S.pm[k]||{};S.pm[k][a]=parseFloat(t.value)||0}
+save();render();
+};
+$('#gen').oninput=e=>{
+if(e.target.id==='s_bar')S.bar=Math.max(50,parseFloat(e.target.value)||600);
+if(e.target.id==='s_kerf')S.kerf=Math.max(0,parseFloat(e.target.value)||0);
+save();render();
+};
+window.startApp=()=>{buildForm();buildSettings();render()};
+</script>
+<script>
+//<crypto>
+const PUB={x:'WE6jp8gOKQRrbA4kKvgD7gM-9JrGE9uykU7-ID6c74I',y:'fS58hbOvhJdFAOcrpnNmvW30WtXZUTLEj1vh21S7hdE'};
+const TRIAL_DAYS=3,DAY=864e5,LK='alu-lic2';
+const b64u=a=>btoa(String.fromCharCode(...a)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const unb64=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+const hex=a=>[...a].map(x=>x.toString(16).padStart(2,'0')).join('');
+const fmtId=h=>h.toUpperCase().match(/.{4}/g).join('-');
+async function verify(code){
+  try{
+    const raw=unb64(code.replace(/\s/g,''));
+    if(raw.length!==74)return null;
+    const data=raw.slice(0,10),sig=raw.slice(10);
+    const key=await crypto.subtle.importKey('jwk',{kty:'EC',crv:'P-256',x:PUB.x,y:PUB.y,ext:true},{name:'ECDSA',namedCurve:'P-256'},false,['verify']);
+    if(!await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},key,sig,data))return null;
+    return{did:hex(data.slice(0,6)),days:data[6]<<8|data[7],issued:data[8]<<8|data[9]};
+  }catch(e){return null}
+}
+//</crypto>
+const idb=(mode,v)=>new Promise(res=>{try{const r=indexedDB.open('alu-lic',1);r.onupgradeneeded=()=>r.result.createObjectStore('k');
+  r.onsuccess=()=>{const t=r.result.transaction('k',mode==='w'?'readwrite':'readonly'),o=t.objectStore('k');
+    if(mode==='w'){o.put(v,LK);t.oncomplete=()=>res()}else{const g=o.get(LK);g.onsuccess=()=>res(g.result||null);g.onerror=()=>res(null)}};r.onerror=()=>res(null)}catch(e){res(null)}});
+let L=null,started=false,openG=false;
+async function loadL(){
+  let a=null,b=null;
+  try{a=JSON.parse(localStorage.getItem(LK))}catch(e){}
+  try{b=JSON.parse(await idb('r'))}catch(e){}
+  const xs=[a,b].filter(Boolean),now=Date.now();
+  if(!xs.length)L={did:hex(crypto.getRandomValues(new Uint8Array(6))),t0:now,last:now,codes:[]};
+  else{
+    L={did:xs[0].did,t0:Math.min(...xs.map(x=>x.t0)),last:Math.max(...xs.map(x=>x.last)),codes:[]};
+    const seen={};xs.forEach(x=>(x.codes||[]).forEach(c=>{if(!seen[c.c]){seen[c.c]=1;L.codes.push(c)}}));
+  }
+  await saveL();
+}
+async function saveL(){const s=JSON.stringify(L);try{localStorage.setItem(LK,s)}catch(e){}await idb('w',s)}
+function status(){
+  const now=Date.now();
+  const te=L.t0+TRIAL_DAYS*DAY;let cur=0;
+  [...L.codes].sort((a,b)=>a.at-b.at).forEach(c=>{cur=Math.max(cur,c.at)+c.days*DAY});
+  const exp=Math.max(te,cur);
+  if(now<L.last-6*36e5)return{ok:false,clock:true,exp};
+  return{ok:now<exp,exp,paid:now<cur};
+}
+async function redeem(code){
+  if(PUB.x.startsWith('PASTE'))return'لم يُضبط مفتاح المدير داخل التطبيق';
+  const v=await verify(code);
+  if(!v)return'الكود غير صحيح';
+  if(v.did!==L.did)return'هذا الكود مخصص لجهاز آخر';
+  const today=Math.floor(Date.now()/DAY);
+  if(today-v.issued>90||v.issued>today+2)return'انتهت صلاحية الكود. اطلب كوداً جديداً من المورد';
+  const key=code.replace(/\s/g,'');
+  if(L.codes.some(c=>c.c===key))return'هذا الكود مستخدم من قبل';
+  L.codes.push({c:key,days:v.days,at:Date.now()});await saveL();return'';
+}
+const GT=document.getElementById('gate');
+function drawGate(locked,text){
+  GT.hidden=false;
+  GT.innerHTML=`<div class="gcard"><h1>تفعيل التطبيق</h1><p>${text||(locked?'انتهت الفترة التجريبية. أرسل رقم الجهاز للمورد لتحصل على كود التفعيل.':'أدخل كود التفعيل لتمديد الاشتراك.')}</p><label>رقم الجهاز (أرسله للمورد)</label><div class="row" style="grid-template-columns:1fr auto"><input id="gd" readonly dir="ltr" value="${fmtId(L.did)}"><button class="sec" id="gcp">نسخ</button></div><label for="gk">كود التفعيل</label><textarea id="gk" rows="3" dir="ltr" placeholder="الصق الكود هنا"></textarea><button class="pri" id="gact">فعّل</button>${locked?'':'<button class="sec" id="gcl" style="width:100%;margin-top:8px">إغلاق</button>'}<div id="gm" class="err" style="margin-top:8px"></div></div>`;
+  $('#gcp').onclick=()=>{try{navigator.clipboard.writeText(fmtId(L.did));$('#gm').textContent=''}catch(e){$('#gd').select()}};
+  $('#gact').onclick=async()=>{const m=await redeem($('#gk').value);if(m)$('#gm').textContent=m;else{openG=false;await tick()}};
+  if(!locked)$('#gcl').onclick=()=>{openG=false;GT.hidden=true};
+}
+async function tick(){
+  if(!L)return;
+  const st=status(),now=Date.now();
+  if(!st.clock&&now>L.last){L.last=now;await saveL()}
+  if(!st.ok){
+    drawGate(true,st.clock?'تم اكتشاف تغيير في تاريخ الجهاز. صحّح التاريخ والوقت، أو فعّل بكود.':'');
+    return;
+  }
+  if(!openG)GT.hidden=true;
+  if(!started){
+    started=true;startApp();
+    document.querySelector('.wrap').insertAdjacentHTML('afterbegin','<div class="lic"><span id="ls"></span><button class="sec" id="lbtn">تفعيل / تجديد</button></div>');
+    $('#lbtn').onclick=()=>{openG=true;drawGate(false)};
+  }
+  const left=Math.ceil((st.exp-now)/DAY);
+  $('#ls').innerHTML=st.paid?`الاشتراك فعّال: باقي <span class="num">${left}</span> يوم`:`نسخة تجريبية: باقي <span class="num">${left}</span> يوم`;
+}
+(async()=>{await loadL();await tick();setInterval(tick,60000)})();
+</script>
+</body>
+</html>
